@@ -50,15 +50,30 @@ const PaymentConfirmPage = () => {
       "0"
     )}/${currentDate.getFullYear()}`;
 
+    if (!profilePic) {
+      setAlert({
+        message: "Please select a file before submitting.",
+        type: "error",
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", profilePic);
+
+    // Optional: Add other fields if required by the server
+    // formData.append("title", e.target.title.value);
 
     try {
       const result = await axiosCommon.post("/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const imageUrl = result.data.file.url;
+      const imageUrl = result.data?.file?.url;
+      if (!imageUrl) {
+        throw new Error("File upload failed. No URL returned.");
+      }
+
       setPreviewUrl(imageUrl);
 
       const emailParams = {
@@ -85,8 +100,9 @@ const PaymentConfirmPage = () => {
         type: "success",
       });
     } catch (error) {
+      console.error("Error details:", error.response?.data || error.message);
       setAlert({
-        message: "Error submitting the form. Please try again.",
+        message: error.response?.data?.message || "Error submitting the form.",
         type: "error",
       });
     }
