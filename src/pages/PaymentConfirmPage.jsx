@@ -61,20 +61,18 @@ const PaymentConfirmPage = () => {
     const formData = new FormData();
     formData.append("file", profilePic);
 
-    // Optional: Add other fields if required by the server
-    // formData.append("title", e.target.title.value);
-
     try {
       const result = await axiosCommon.post("/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      console.log(result);
+
       const imageUrl = result.data?.file?.url;
+      console.log(imageUrl, "Image url");
       if (!imageUrl) {
         throw new Error("File upload failed. No URL returned.");
       }
-
-      setPreviewUrl(imageUrl);
 
       const emailParams = {
         to_name: "Suvas",
@@ -99,6 +97,12 @@ const PaymentConfirmPage = () => {
         message: "Thank you. I will get back to you as soon as possible.",
         type: "success",
       });
+      navigate("/");
+
+      // Reset the form fields
+      e.target.reset();
+      setProfilePic(null);
+      setPreviewUrl(null);
     } catch (error) {
       console.error("Error details:", error.response?.data || error.message);
       setAlert({
@@ -169,9 +173,9 @@ const PaymentConfirmPage = () => {
                   <BiUpload className="text-xl font-semibold" /> Choose File
                 </label>
                 <input
-                  id="file-upload"
+                  // id="file-upload"
                   type="file"
-                  accept="image/*"
+                  // accept="image/*"
                   onChange={handleFileChange}
                   className="absolute inset-0 opacity-0 w-fit cursor-pointer"
                 />

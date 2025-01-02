@@ -18,7 +18,7 @@ const PaymentsData = () => {
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const response = await axiosInstance.get("/api/payments", {
+        const response = await axiosInstance.get("/payments", {
           headers: {
             authorization: `Bearer ${token}`,
           },
@@ -38,7 +38,7 @@ const PaymentsData = () => {
   const handleDelete = async (transactionId) => {
     try {
       // Make DELETE request to the backend API
-      await axiosInstance.delete(`/api/payments/${transactionId}`, {
+      await axiosInstance.delete(`/payments/${transactionId}`, {
         headers: {
           authorization: `Bearer ${token}`,
         },

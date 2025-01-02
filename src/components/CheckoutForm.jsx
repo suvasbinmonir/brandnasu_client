@@ -132,7 +132,7 @@ const CheckoutForm = () => {
 
     try {
       // Using axiosCommon to make the API request
-      const { data } = await axiosInstance.post("/api/create-payment-intent", {
+      const { data } = await axiosInstance.post("/create-payment-intent", {
         price: formData?.price / 100,
       });
 
@@ -181,7 +181,7 @@ const CheckoutForm = () => {
           year: "numeric",
         }),
       };
-      await axiosInstance.post("/api/payments", payment);
+      await axiosInstance.post("/payments", payment);
     } catch (err) {
       setAlert({
         message: "Something went wrong. Please try again.",
