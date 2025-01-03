@@ -10,8 +10,8 @@ const PaymentConfirmPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const axiosCommon = useAxiosCommon();
-  const [profilePic, setProfilePic] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState({ message: "", type: "" });
   const { transactionId, userName, linkedInUrl } = location.state || {};
 
@@ -25,12 +25,23 @@ const PaymentConfirmPage = () => {
     window.open("https://wa.me/15055757863", "_blank");
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setProfilePic(file);
-      setPreviewUrl(URL.createObjectURL(file));
+  const handleFileAdd = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+
+    if (files.length + selectedFiles.length > 5) {
+      setAlert({
+        message: "You can upload a maximum of 5 files.",
+        type: "error",
+      });
+      return;
     }
+
+    setFiles((prevFiles) => [...prevFiles, ...selectedFiles]);
+    setAlert({ message: "", type: "" });
+  };
+
+  const handleFileRemove = (index) => {
+    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -50,7 +61,7 @@ const PaymentConfirmPage = () => {
       "0"
     )}/${currentDate.getFullYear()}`;
 
-    if (!profilePic) {
+    if (files.length === 0) {
       setAlert({
         message: "Please select a file before submitting.",
         type: "error",
@@ -58,8 +69,10 @@ const PaymentConfirmPage = () => {
       return;
     }
 
+    setLoading(true);
+
     const formData = new FormData();
-    formData.append("file", profilePic);
+    files.forEach((file) => formData.append("files", file));
 
     try {
       const result = await axiosCommon.post("/upload", formData, {
@@ -68,11 +81,16 @@ const PaymentConfirmPage = () => {
 
       console.log(result);
 
-      const imageUrl = result.data?.file?.url;
-      console.log(imageUrl, "Image url");
-      if (!imageUrl) {
+      const uploadedFiles = result.data?.files || [];
+      const imageUrls = uploadedFiles.map((file) => file.url);
+      console.log(imageUrls, "Image URLs");
+
+      if (imageUrls.length === 0) {
         throw new Error("File upload failed. No URL returned.");
       }
+
+      // Convert imageUrls array to a comma-separated string
+      const imageUrlsString = imageUrls.join(", "); // Join the URLs into a single string
 
       const emailParams = {
         to_name: "Suvas",
@@ -82,9 +100,11 @@ const PaymentConfirmPage = () => {
         title: e.target.title.value,
         colorScheme: e.target.colorScheme.value,
         additionalInfo: e.target.additionalInfo.value,
-        imageUrl,
+        imageUrls: imageUrlsString, // Pass the imageUrls as a string, not an array
         linkedInUrl,
       };
+
+      console.log(emailParams);
 
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -101,14 +121,15 @@ const PaymentConfirmPage = () => {
 
       // Reset the form fields
       e.target.reset();
-      setProfilePic(null);
-      setPreviewUrl(null);
+      setFiles([]);
     } catch (error) {
       console.error("Error details:", error.response?.data || error.message);
       setAlert({
         message: error.response?.data?.message || "Error submitting the form.",
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,7 +152,7 @@ const PaymentConfirmPage = () => {
           <h1 className="lg:text-2xl md:text-xl text-lg lg:mb-10 md:mb-8 mb-6 poppins-medium">
             ✅ Your order has been placed successfully.
           </h1>
-          <h2 className="lg:text-4xl md:text-3xl text-2xl  poppins-regular md:poppins-medium mb-8">
+          <h2 className="lg:text-4xl md:text-3xl text-2xl poppins-regular md:poppins-medium mb-8">
             Fill Out the Requirement
           </h2>
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -167,27 +188,46 @@ const PaymentConfirmPage = () => {
               </span>
               <div className="relative inline-block w-fit">
                 <label
-                  htmlFor="file-upload"
-                  className="px-6 py-2 text-sm font-medium bg-lightIndigo text-darkIndigo rounded-md flex items-center gap-1 cursor-pointer hover:bg-blue-100"
+                  htmlFor="multiFileInput"
+                  className={`px-6 py-2 text-sm font-medium bg-lightIndigo text-darkIndigo rounded-md flex items-center gap-1 cursor-pointer hover:bg-blue-100 ${
+                    files.length >= 5 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   <BiUpload className="text-xl font-semibold" /> Choose File
                 </label>
                 <input
-                  // id="file-upload"
                   type="file"
-                  // accept="image/*"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 opacity-0 w-fit cursor-pointer"
+                  multiple
+                  onChange={handleFileAdd}
+                  id="multiFileInput"
+                  disabled={loading || files.length >= 5}
+                  className={`absolute inset-0 opacity-0 w-fit cursor-pointer ${
+                    files.length === 5 ? "hidden" : ""
+                  }`}
                 />
               </div>
             </div>
-            {previewUrl && (
-              <div className="mt-3">
-                <img
-                  src={previewUrl}
-                  alt="Profile Preview"
-                  className="h-32 w-64 object-cover border border-lightIndigo"
-                />
+            {files.length > 0 && (
+              <div className="mb-4">
+                <ul className="space-y-2">
+                  {files.map((file, index) => (
+                    <li
+                      key={index}
+                      className="flex justify-between items-center bg-gray-100 p-2 rounded-md shadow-sm"
+                    >
+                      <span className="text-gray-700 truncate">
+                        {file.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleFileRemove(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        &times;
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
             <label className="block text-left">
@@ -206,7 +246,7 @@ const PaymentConfirmPage = () => {
               type="submit"
               className="w-full text-lg bg-lightIndigo transition-colors duration-150 hover:bg-lightIndigo/90 text-darkIndigo poppins-semibold py-2.5 px-4 rounded"
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
           </form>
         </div>
