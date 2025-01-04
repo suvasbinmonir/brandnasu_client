@@ -35,15 +35,15 @@ const BannerNav = () => {
         type={alert.type}
         onClose={() => setAlert({ message: "", type: "" })}
       />
-      <h3 className="lg:w-40 md:w-32 w-20">
-        <img src="/Logo.png" alt="BrandNasu Logo" />
+      <h3 className="lg:w-40 md:w-32 w-24">
+        <img src="/Logo.png" alt="BrandNasu Logo" className="w-full h-full" />
       </h3>
       <div className="flex justify-center items-center md:gap-6 gap-4">
         <a
           href="mailto:hello@brandnasu.com"
           target="_blank"
           rel="noopener noreferrer"
-          className="bg-darkIndigo lg:text-[26px] md:text-2xl text-base lg:poppins-bold md:poppins-semibold poppins-medium md:px-4 py-2.5 p-2 md:tracking-wide"
+          className="bg-darkIndigo lg:text-[26px] md:text-2xl text-base lg:poppins-bold md:poppins-semibold poppins-light md:px-4 lg:py-2.5 md:p-2 py-1 px-2 md:tracking-wide"
         >
           hello@brandnasu.com
         </a>
@@ -51,7 +51,7 @@ const BannerNav = () => {
           <div>
             <button
               onClick={handleGoogleSignIn}
-              className="border-2 border-darkIndigo px-6 py-2.5 text-lightIndigo text-lg poppins-semibold hover:bg-darkIndigo"
+              className="border-2 border-darkIndigo lg:px-6 lg:py-2.5 md:px-5 md:py-2 px-2 py-1 text-lightIndigo md:text-xl text-sm md:poppins-bold poppins-light hover:bg-darkIndigo"
             >
               Login
             </button>
